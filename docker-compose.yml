@@ -1,0 +1,30 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: payments-edge-nginx
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - payments-api-a
+      - payments-api-b
+      - payments-api-c
+
+  payments-api-a:
+    image: nginx:1.27-alpine
+    container_name: payments-api-a
+    volumes:
+      - ./upstream/pod-a:/usr/share/nginx/html:ro
+
+  payments-api-b:
+    image: nginx:1.27-alpine
+    container_name: payments-api-b
+    volumes:
+      - ./upstream/pod-b:/usr/share/nginx/html:ro
+
+  payments-api-c:
+    image: nginx:1.27-alpine
+    container_name: payments-api-c
+    volumes:
+      - ./upstream/pod-c:/usr/share/nginx/html:ro

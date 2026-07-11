@@ -1,0 +1,19 @@
+Incident: PAY-EDGE-1847
+Service: payments API edge
+Environment represented locally by /root/task
+
+Summary:
+Customers reported intermittent 502 responses for payment API requests during a routine application rollout window. The edge tier continued to answer health checks, and at least two application replicas were believed to be healthy during the event.
+
+Sanitized observations from production:
+2025-02-18T09:14:07Z error nginx: connect() failed (111: Connection refused) while connecting to upstream, client: 203.0.113.44, server: api.payments.example.com, request: "POST /v1/charges HTTP/1.1", upstream: "http://payments-api-b:3000/v1/charges"
+2025-02-18T09:14:09Z error nginx: upstream timed out while reading response header from upstream, client: 203.0.113.51, server: api.payments.example.com, request: "POST /v1/refunds HTTP/1.1", upstream: "http://payments-api-c:3000/v1/refunds"
+2025-02-18T09:14:12Z access nginx: 203.0.113.44 - - [18/Feb/2025:09:14:12 +0000] "POST /v1/charges HTTP/1.1" 502 157 "-" "mobile-client/7.3" "198.51.100.10"
+2025-02-18T09:14:13Z access nginx: 203.0.113.71 - - [18/Feb/2025:09:14:13 +0000] "GET /assets/app.js HTTP/1.1" 200 168 "https://payments.example.com" "Mozilla/5.0" "-"
+
+Operator notes:
+- Existing edge access logs did not make it easy to identify the selected backend or compare edge time with backend time.
+- The application team says some deploy transitions can briefly refuse new connections.
+- Security review noted that the local starter mirrors an HTTP-only edge shape for assessment simplicity; production changes must still be reasoned about as payments-facing traffic.
+- Static assets are safe to cache more aggressively than payment API responses.
+- Any retry behavior for payment-changing requests should be conservative and called out in the rollout notes.
